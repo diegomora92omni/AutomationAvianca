@@ -1,21 +1,20 @@
 /// <reference types='Cypress' />
 
-    describe('Test cases for Create Account flow', () => {
-        const password1 = 'Pruebas123*'
-        const password2 = 'Pruebas123$'
-
-        
-        beforeEach(() => {
-            cy.visit('https://mcstaging.komaxchile.cl/guess_peru_store_view/')
-        });
-
-        context('Create Account flow', () => {
-
-            // Test case #1: Verificar que un usuario no registrado pueda crear una cuenta
-            it('CRE-001: Verify that an unregistered user can create an account', () => {
-
-                // Hacer clic en el botón "Crear una cuenta"
-                cy.contains('a', 'Crear').click({force: true})
+describe('Test cases for Create Account flow', () => {
+    const password1 = 'Pruebas123*';
+    const password2 = 'Pruebas123$';
+  
+    beforeEach(() => {
+        cy.setCookie('user_allowed_save_cookie', '%7B%2213%22%3A1%7D')
+        cy.visit('/');
+        cy.closeNewsletterPopup();
+      });
+  
+    context('Create Account flow', () => {
+      // Test case #1: Verificar que un usuario no registrado pueda crear una cuenta
+      it('CRE-001: Verify that an unregistered user can create an account', () => {
+        // Hacer clic en el botón "Crear una cuenta"
+        cy.contains('a', 'Crear').click({ force: true });
 
                 // Utilizar el comando personalizado para rellenar el formulario de registro
                 cy.fillRegisterFormWithRandomData()
@@ -25,14 +24,14 @@
                 cy.get('#password-confirmation').type(password1)
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                ////cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()
 
                 //Verificar mensaje de registro exitoso
                 cy.get('.message-success').should('exist')
-            });
+      });
             
 //ACTUALMENTE AXO NO HACE ESTA VALIDACIóN por eso este caso se salta (skip)
             // Test case #2: Verificar que un usuario registrado no pueda crear una cuenta
@@ -54,7 +53,7 @@
                 cy.get('#password-confirmation').type(password1)
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()
@@ -81,7 +80,7 @@
                 cy.get('#password-confirmation').type(password1)
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()
@@ -108,7 +107,7 @@
                 cy.get('#password-confirmation').type(password1)
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()
@@ -118,7 +117,8 @@
             });
 
             // Test case #5: Verificar que no se pueda crear cuenta cuando el número de identificación no sea valido
-            it('CRE-005: Verify that the account cannot be created when the identification number is not valid', () => {
+            //Este caso no aplica porque actualmente el sitio no pide número de identificación para registrarse
+            it.skip('CRE-005: Verify that the account cannot be created when the identification number is not valid', () => {
 
                 // Hacer clic en el botón "Crear una cuenta"
                 cy.contains('a', 'Crear').click({force: true})
@@ -135,7 +135,7 @@
                 cy.get('#password-confirmation').type(password1)
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()
@@ -193,7 +193,7 @@
                 cy.get('#password-confirmation').type(password2)
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()            
@@ -221,7 +221,7 @@
                 cy.get('#password-confirmation').type(password1)
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()
@@ -260,7 +260,7 @@
                  cy.get('#password-confirmation').type('pruebas1')
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click();
@@ -269,7 +269,8 @@
             })
 
             // Test case #12: Verificar creación de cuenta sin seleccionar Recordarme ¿Qué es esto?
-            it('CRE-0012: Verify account creation without selecting Remember Me What is this?', () => {
+            //Este caso no aplica porque actualmente el sitio no tiene la opción Recordarme ¿Qué es esto?
+            it.skip('CRE-0012: Verify account creation without selecting Remember Me What is this?', () => {
 
                 // Hacer clic en el botón "Crear una cuenta"
                 cy.contains('a', 'Crear').click({force: true})
@@ -285,7 +286,7 @@
                 cy.get('input[id^="remember_"]').uncheck()
 
                 //Aceptar las políticas de privacidad de datos
-                cy.get('#data_privacy_policies_allowed').check();
+                //cy.get('#data_privacy_policies_allowed').check();
 
                 // Enviar el formulario
                 cy.get('#send2').click()
@@ -295,7 +296,8 @@
             });
 
             // Test case #14: Verificar que aceptar la política de privacidad de datos sea obligatorio
-            it('CRE-014: Verify that an unregistered user can create an account', () => {
+            //Este caso no aplica porque actualmente el sitio no tiene la opción para aceptar la política de privacidad
+            it.skip('CRE-014: Verify that an unregistered user can create an account', () => {
 
                 // Hacer clic en el botón "Crear una cuenta"
                 cy.contains('a', 'Crear').click({force: true})

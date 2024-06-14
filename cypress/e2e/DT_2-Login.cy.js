@@ -11,8 +11,10 @@
         });
 
         beforeEach(() => {
-        cy.visit('https://mcstaging.komaxchile.cl/guess_peru_store_view/')
-        })
+            cy.setCookie('user_allowed_save_cookie', '%7B%2213%22%3A1%7D')
+            cy.visit('/');
+            cy.closeNewsletterPopup();
+          });
     
         context('Login flow', () => {
 
@@ -20,7 +22,7 @@
             it('LOG-001: Verify that an unregistered user can create an account', () => {
 
                 // Hacer clic en el botón "Entrar"
-                cy.contains('a', 'Entrar').click({force: true})
+                cy.contains('a', 'Únete').click({force: true})
 
                 // Llenar formulario de "Clientes registrados"
                 cy.get('#email').type(usuarios[0].email)
@@ -34,7 +36,7 @@
             it('LOG-002: Verify that an unregistered user can create an account', () => {
 
                 // Hacer clic en el botón "Entrar"
-                cy.contains('a', 'Entrar').click({force: true})
+                cy.contains('a', 'Únete').click({force: true})
 
                 // Llenar formulario de "Clientes registrados" con una clave errada
                 cy.get('#email').type(usuarios[0].email)
@@ -49,7 +51,7 @@
             it('LOG-003: Verify that it does not allow logging in with an unregistered email address', () => {
 
                 // Hacer clic en el botón "Entrar"
-                cy.contains('a', 'Entrar').click({force: true})
+                cy.contains('a', 'Únete').click({force: true})
 
                 // Llenar formulario de "Clientes registrados" con un email que no existe
                 cy.get('#email').type('noexiste@yopmail.com')
@@ -66,7 +68,7 @@
             it('LOG-004: Verify that it allows password recovery', () => {
 
                 // Hacer clic en el botón "Entrar"
-                cy.contains('a', 'Entrar').click({force: true})
+                cy.contains('a', 'Únete').click({force: true})
 
                 // Hacer clic en el botón ¿Olvidaste tu contraseña?
                 cy.get('a.action.remind').click()
@@ -83,7 +85,7 @@
             it('LOG-005: Verify that a logged-in user can log off', () => {
 
                 // Hacer clic en el botón "Entrar"
-                cy.contains('a', 'Entrar').click({force: true})
+                cy.contains('a', 'Únete').click({force: true})
 
                 // Llenar formulario de "Clientes registrados"
                 cy.get('#email').type(usuarios[0].email)
@@ -107,7 +109,7 @@
             it('LOG-006: Verify that a user can change his password and log in again.', () => {
 
                 // Hacer clic en el botón "Entrar"
-                cy.contains('a', 'Entrar').click({force: true})
+                cy.contains('a', 'Únete').click({force: true})
 
                 // Llenar formulario de "Clientes registrados"
                 cy.get('#email').type(usuarios[0].email)

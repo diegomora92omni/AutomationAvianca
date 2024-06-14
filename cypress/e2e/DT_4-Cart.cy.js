@@ -12,7 +12,9 @@ describe('Test cases for Cart flow', () => {
     });
 
     beforeEach(() => {
-        cy.visit('https://mcstaging.komaxchile.cl/guess_peru_store_view/');
+        cy.setCookie('user_allowed_save_cookie', '%7B%2213%22%3A1%7D')
+        cy.visit('/');
+        cy.closeNewsletterPopup();
 
         // Captura el estado inicial del carrito
         cy.get('.counter.qty.empty, .counter.qty').invoke('text').then((text) => {
@@ -39,9 +41,17 @@ describe('Test cases for Cart flow', () => {
                cy.wrap($products).eq(randomIndex).find('.product-item-link').invoke('removeAttr', 'target').click();
            });
 
-            // Selecciona el contenedor de opciones de color específico
-            cy.get('.swatch-attribute[data-attribute-code="color_padre"][data-attribute-id="272"]')
-            .find('.swatch-option.color').then($colors => {
+            // Espera adicional para asegurarte de que el contenido se ha cargado completamente
+            cy.wait(5000);
+
+            // Selecciona el contenedor de opciones de color específico con un tiempo de espera mayor
+            cy.get('.swatch-attribute.color[data-attribute-code="color"]', { timeout: 10000 })
+            .should('exist')
+            .within(() => {
+            // Verifica que hay opciones de color disponibles y visibles
+            cy.get('.swatch-attribute-options .swatch-option.color', { timeout: 10000 })
+            .should('have.length.greaterThan', 0)
+            .then($colors => {
             // Asegura que las opciones son visibles y selecciona una aleatoriamente
             const availableColors = $colors.filter((i, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
             if (availableColors.length > 0) {
@@ -50,26 +60,27 @@ describe('Test cases for Cart flow', () => {
             } else {
             cy.log('No hay colores disponibles o visibles para seleccionar.');
             }
-            });
+        });
+        });
 
-            cy.get('.size_tops .swatch-option.text').then($options => {
-            // Filtrar solo las opciones que están habilitadas
-            const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
-            if (availableOptions.length > 0) {
-            // Elige un índice aleatorio entre las opciones disponibles y habilitadas
-            const randomIndex = Math.floor(Math.random() * availableOptions.length);
-            // Realiza clic en la opción en el índice aleatorio
-            cy.wrap(availableOptions).eq(randomIndex).click({force: true});
-            } else {
-            // Manejar el caso en que no hay tallas disponibles
-            cy.log('No hay tallas disponibles para el color seleccionado.');
-            }
-            });  
+            cy.get('.swatch-attribute[data-attribute-code="size"] .swatch-attribute-options .swatch-option.text').then($options => {
+                // Filtrar solo las opciones que están habilitadas
+                const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
+                if (availableOptions.length > 0) {
+                  // Elige un índice aleatorio entre las opciones disponibles y habilitadas
+                  const randomIndex = Math.floor(Math.random() * availableOptions.length);
+                  // Realiza clic en la opción en el índice aleatorio
+                  cy.wrap(availableOptions).eq(randomIndex).click({ force: true });
+                } else {
+                  // Manejar el caso en que no hay tallas disponibles
+                  cy.log('No hay tallas disponibles para el color seleccionado.');
+                }
+              });  
 
            // Agrega el producto al carrito
            cy.get('#product-addtocart-button').click();
 
-           cy.wait(5000)
+           cy.wait(8000)
 
            // Espera a que el estado del carrito cambie correctamente
            cy.get('.counter.qty.empty, .counter.qty').should(($newCartState) => {
@@ -92,14 +103,11 @@ describe('Test cases for Cart flow', () => {
            // Verifica si se muestra el mensaje de éxito
            cy.get('.message-success').should('be.visible');
 
-            //Hacer click en botón para cerrar modal AÑADISTE A TU CARRO DE COMPRAS           
-           cy.get('button.action-close').last().click();
-           
-           //Abrir pop up carrito
-           cy.get('button.opencart').click();
+            // Selecciona el enlace 'Mi Carro' y haz clic en él
+            cy.get('a.action.showcart').click();
 
-           //Click en botón "Ver Carrito" de pop up carrito
-           cy.get('button#top-cart-btn-shoppingCart').click();
+            // Selecciona el enlace 'Ver todo el carro' y haz clic en él
+            cy.get('a.action.viewcart').click();
 
            // Verifica que la URL actual incluya el path específico
            cy.url().should('include', '/checkout/cart/');
@@ -107,20 +115,12 @@ describe('Test cases for Cart flow', () => {
            //Hace click en primer botón "Eliminar", es decir si hay más de un producto elimina el primero
            cy.get('a.action.action-delete[title="Eliminar"]').first().click();
 
-           // Verificar que aparece el texto "No tienes ningún artículo en el carrito."
-           cy.contains('p', 'No tienes ningún artículo en el carrito.').should('be.visible');
+            // Hacer clic en el enlace 'Explorar'
+            cy.get('a.action.primary.continue').click();
 
-           // Verificar que aparece el texto "Haga clic aquí para continuar comprando.", incluyendo el enlace.
-           cy.contains('p', 'Haga clic aquí para continuar comprando.').should('be.visible');
-
-           // Verificar la presencia del párrafo y el enlace dentro de este
-           cy.contains('p', 'Haga clic').parent().contains('a', 'aquí').should('have.attr', 'href', 'https://mcstaging.komaxchile.cl/guess_peru_store_view/').should('be.visible');
-           
-           // Hacer clic en el enlace con el texto "aquí"
-           cy.contains('a', 'aquí').click();
 
            // Verifica que la URL actual incluya el path específico
-           cy.url().should('include', '/guess_peru_store_view');
+           cy.url().should('include', '/merrell_peru_store_view');
            
        });
 
@@ -139,9 +139,17 @@ describe('Test cases for Cart flow', () => {
                 cy.wrap($products).eq(randomIndex).find('.product-item-link').invoke('removeAttr', 'target').click();
             });
 
-            // Selecciona el contenedor de opciones de color específico
-            cy.get('.swatch-attribute[data-attribute-code="color_padre"][data-attribute-id="272"]')
-            .find('.swatch-option.color').then($colors => {
+            // Espera adicional para asegurarte de que el contenido se ha cargado completamente
+            cy.wait(5000);
+
+            // Selecciona el contenedor de opciones de color específico con un tiempo de espera mayor
+            cy.get('.swatch-attribute.color[data-attribute-code="color"]', { timeout: 10000 })
+            .should('exist')
+            .within(() => {
+            // Verifica que hay opciones de color disponibles y visibles
+            cy.get('.swatch-attribute-options .swatch-option.color', { timeout: 10000 })
+            .should('have.length.greaterThan', 0)
+            .then($colors => {
             // Asegura que las opciones son visibles y selecciona una aleatoriamente
             const availableColors = $colors.filter((i, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
             if (availableColors.length > 0) {
@@ -150,26 +158,27 @@ describe('Test cases for Cart flow', () => {
             } else {
             cy.log('No hay colores disponibles o visibles para seleccionar.');
             }
-            });
+        });
+        });
 
-            cy.get('.size_tops .swatch-option.text').then($options => {
-            // Filtrar solo las opciones que están habilitadas
-            const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
-            if (availableOptions.length > 0) {
-            // Elige un índice aleatorio entre las opciones disponibles y habilitadas
-            const randomIndex = Math.floor(Math.random() * availableOptions.length);
-            // Realiza clic en la opción en el índice aleatorio
-            cy.wrap(availableOptions).eq(randomIndex).click({force: true});
-            } else {
-            // Manejar el caso en que no hay tallas disponibles
-            cy.log('No hay tallas disponibles para el color seleccionado.');
-            }
-            });
+            cy.get('.swatch-attribute[data-attribute-code="size"] .swatch-attribute-options .swatch-option.text').then($options => {
+                // Filtrar solo las opciones que están habilitadas
+                const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
+                if (availableOptions.length > 0) {
+                  // Elige un índice aleatorio entre las opciones disponibles y habilitadas
+                  const randomIndex = Math.floor(Math.random() * availableOptions.length);
+                  // Realiza clic en la opción en el índice aleatorio
+                  cy.wrap(availableOptions).eq(randomIndex).click({ force: true });
+                } else {
+                  // Manejar el caso en que no hay tallas disponibles
+                  cy.log('No hay tallas disponibles para el color seleccionado.');
+                }
+              }); ;
 
             // Agrega el producto al carrito
             cy.get('#product-addtocart-button').click();
 
-            cy.wait(5000)
+            cy.wait(8000)
 
             // Espera a que el estado del carrito cambie correctamente
             cy.get('.counter.qty.empty, .counter.qty').should(($newCartState) => {
@@ -192,20 +201,17 @@ describe('Test cases for Cart flow', () => {
             // Verifica si se muestra el mensaje de éxito
             cy.get('.message-success').should('be.visible');
 
-             //Hacer click en botón para cerrar modal AÑADISTE A TU CARRO DE COMPRAS           
-            cy.get('button.action-close').last().click();
-            
-            //Abrir pop up carrito
-            cy.get('button.opencart').click();
+            // Selecciona el enlace 'Mi Carro' y haz clic en él
+            cy.get('a.action.showcart').click();
 
-            //Click en botón "Ver Carrito" de pop up carrito
-            cy.get('button#top-cart-btn-shoppingCart').click();
+            // Selecciona el enlace 'Ver todo el carro' y haz clic en él
+            cy.get('a.action.viewcart').click();
 
             // Verifica que la URL actual incluya el path específico
             cy.url().should('include', '/checkout/cart/');
 
-            // Hacer clic solo en el primer botón encontrado con las clases "counter-qty" y "minus"
-            cy.get('button.counter-qty.minus').first().click();
+            // Hacer clic en el botón para reducir la cantidad
+            cy.get('button[title="Reduce the quantity"]').first().click();
 
         });
 
@@ -221,9 +227,17 @@ describe('Test cases for Cart flow', () => {
                 cy.wrap($products).eq(randomIndex).find('.product-item-link').invoke('removeAttr', 'target').click();
             });
 
-            // Selecciona el contenedor de opciones de color específico
-            cy.get('.swatch-attribute[data-attribute-code="color_padre"][data-attribute-id="272"]')
-            .find('.swatch-option.color').then($colors => {
+            // Espera adicional para asegurarte de que el contenido se ha cargado completamente
+            cy.wait(5000);
+
+            // Selecciona el contenedor de opciones de color específico con un tiempo de espera mayor
+            cy.get('.swatch-attribute.color[data-attribute-code="color"]', { timeout: 10000 })
+            .should('exist')
+            .within(() => {
+            // Verifica que hay opciones de color disponibles y visibles
+            cy.get('.swatch-attribute-options .swatch-option.color', { timeout: 10000 })
+            .should('have.length.greaterThan', 0)
+            .then($colors => {
             // Asegura que las opciones son visibles y selecciona una aleatoriamente
             const availableColors = $colors.filter((i, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
             if (availableColors.length > 0) {
@@ -232,26 +246,27 @@ describe('Test cases for Cart flow', () => {
             } else {
             cy.log('No hay colores disponibles o visibles para seleccionar.');
             }
-            });
+        });
+        });
 
-            cy.get('.size_tops .swatch-option.text').then($options => {
-            // Filtrar solo las opciones que están habilitadas
-            const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
-            if (availableOptions.length > 0) {
-            // Elige un índice aleatorio entre las opciones disponibles y habilitadas
-            const randomIndex = Math.floor(Math.random() * availableOptions.length);
-            // Realiza clic en la opción en el índice aleatorio
-            cy.wrap(availableOptions).eq(randomIndex).click({force: true});
-            } else {
-            // Manejar el caso en que no hay tallas disponibles
-            cy.log('No hay tallas disponibles para el color seleccionado.');
-            }
-            });
+            cy.get('.swatch-attribute[data-attribute-code="size"] .swatch-attribute-options .swatch-option.text').then($options => {
+                // Filtrar solo las opciones que están habilitadas
+                const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
+                if (availableOptions.length > 0) {
+                  // Elige un índice aleatorio entre las opciones disponibles y habilitadas
+                  const randomIndex = Math.floor(Math.random() * availableOptions.length);
+                  // Realiza clic en la opción en el índice aleatorio
+                  cy.wrap(availableOptions).eq(randomIndex).click({ force: true });
+                } else {
+                  // Manejar el caso en que no hay tallas disponibles
+                  cy.log('No hay tallas disponibles para el color seleccionado.');
+                }
+              }); ;
 
             // Agrega el producto al carrito
             cy.get('#product-addtocart-button').click();
 
-            cy.wait(5000)
+            cy.wait(8000)
 
             // Espera a que el estado del carrito cambie correctamente
             cy.get('.counter.qty.empty, .counter.qty').should(($newCartState) => {
@@ -274,20 +289,17 @@ describe('Test cases for Cart flow', () => {
             // Verifica si se muestra el mensaje de éxito
             cy.get('.message-success').should('be.visible');
 
-             //Hacer click en botón para cerrar modal AÑADISTE A TU CARRO DE COMPRAS           
-            cy.get('button.action-close').last().click();
-            
-            //Abrir pop up carrito
-            cy.get('button.opencart').click();
+            // Selecciona el enlace 'Mi Carro' y haz clic en él
+            cy.get('a.action.showcart').click();
 
-            //Click en botón "Ver Carrito" de pop up carrito
-            cy.get('button#top-cart-btn-shoppingCart').click();
+            // Selecciona el enlace 'Ver todo el carro' y haz clic en él
+            cy.get('a.action.viewcart').click();
 
             // Verifica que la URL actual incluya el path específico
             cy.url().should('include', '/checkout/cart/');
 
-            // Hacer clic solo en el primer botón encontrado con las clases "counter-qty" y "plus"
-            cy.get('button.counter-qty.plus').first().click();
+            // Hacer clic en el botón para reducir la cantidad
+            cy.get('button[title="Increase the quantity"]').first().click();
 
         });
 
@@ -306,9 +318,17 @@ describe('Test cases for Cart flow', () => {
                 cy.wrap($products).eq(randomIndex).find('.product-item-link').invoke('removeAttr', 'target').click();
             });
 
-            // Selecciona el contenedor de opciones de color específico
-            cy.get('.swatch-attribute[data-attribute-code="color_padre"][data-attribute-id="272"]')
-            .find('.swatch-option.color').then($colors => {
+            // Espera adicional para asegurarte de que el contenido se ha cargado completamente
+            cy.wait(5000);
+
+            // Selecciona el contenedor de opciones de color específico con un tiempo de espera mayor
+            cy.get('.swatch-attribute.color[data-attribute-code="color"]', { timeout: 10000 })
+            .should('exist')
+            .within(() => {
+            // Verifica que hay opciones de color disponibles y visibles
+            cy.get('.swatch-attribute-options .swatch-option.color', { timeout: 10000 })
+            .should('have.length.greaterThan', 0)
+            .then($colors => {
             // Asegura que las opciones son visibles y selecciona una aleatoriamente
             const availableColors = $colors.filter((i, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
             if (availableColors.length > 0) {
@@ -317,26 +337,27 @@ describe('Test cases for Cart flow', () => {
             } else {
             cy.log('No hay colores disponibles o visibles para seleccionar.');
             }
-            });
+        });
+        });
 
-            cy.get('.size_tops .swatch-option.text').then($options => {
-            // Filtrar solo las opciones que están habilitadas
-            const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
-            if (availableOptions.length > 0) {
-            // Elige un índice aleatorio entre las opciones disponibles y habilitadas
-            const randomIndex = Math.floor(Math.random() * availableOptions.length);
-            // Realiza clic en la opción en el índice aleatorio
-            cy.wrap(availableOptions).eq(randomIndex).click({force: true});
-            } else {
-            // Manejar el caso en que no hay tallas disponibles
-            cy.log('No hay tallas disponibles para el color seleccionado.');
-            }
-            }); 
+            cy.get('.swatch-attribute[data-attribute-code="size"] .swatch-attribute-options .swatch-option.text').then($options => {
+                // Filtrar solo las opciones que están habilitadas
+                const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
+                if (availableOptions.length > 0) {
+                  // Elige un índice aleatorio entre las opciones disponibles y habilitadas
+                  const randomIndex = Math.floor(Math.random() * availableOptions.length);
+                  // Realiza clic en la opción en el índice aleatorio
+                  cy.wrap(availableOptions).eq(randomIndex).click({ force: true });
+                } else {
+                  // Manejar el caso en que no hay tallas disponibles
+                  cy.log('No hay tallas disponibles para el color seleccionado.');
+                }
+              }); ; 
 
            // Agrega el producto al carrito
            cy.get('#product-addtocart-button').click();
 
-            cy.wait(5000)
+            cy.wait(8000)
 
             // Espera a que el estado del carrito cambie correctamente
             cy.get('.counter.qty.empty, .counter.qty').should(($newCartState) => {
@@ -359,14 +380,11 @@ describe('Test cases for Cart flow', () => {
             // Verifica si se muestra el mensaje de éxito
             cy.get('.message-success').should('be.visible');
 
-             //Hacer click en botón para cerrar modal AÑADISTE A TU CARRO DE COMPRAS           
-            cy.get('button.action-close').last().click();
-            
-            //Abrir pop up carrito
-            cy.get('button.opencart').click();
+            // Selecciona el enlace 'Mi Carro' y haz clic en él
+            cy.get('a.action.showcart').click();
 
-            //Click en botón "Ver Carrito" de pop up carrito
-            cy.get('button#top-cart-btn-shoppingCart').click();
+            // Selecciona el enlace 'Ver todo el carro' y haz clic en él
+            cy.get('a.action.viewcart').click();
 
             // Verifica que la URL actual incluya el path específico
             cy.url().should('include', '/checkout/cart/');
@@ -397,9 +415,17 @@ describe('Test cases for Cart flow', () => {
                 cy.wrap($products).eq(randomIndex).find('.product-item-link').invoke('removeAttr', 'target').click();
             });
 
-            // Selecciona el contenedor de opciones de color específico
-            cy.get('.swatch-attribute[data-attribute-code="color_padre"][data-attribute-id="272"]')
-            .find('.swatch-option.color').then($colors => {
+            // Espera adicional para asegurarte de que el contenido se ha cargado completamente
+            cy.wait(5000);
+
+            // Selecciona el contenedor de opciones de color específico con un tiempo de espera mayor
+            cy.get('.swatch-attribute.color[data-attribute-code="color"]', { timeout: 10000 })
+            .should('exist')
+            .within(() => {
+            // Verifica que hay opciones de color disponibles y visibles
+            cy.get('.swatch-attribute-options .swatch-option.color', { timeout: 10000 })
+            .should('have.length.greaterThan', 0)
+            .then($colors => {
             // Asegura que las opciones son visibles y selecciona una aleatoriamente
             const availableColors = $colors.filter((i, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
             if (availableColors.length > 0) {
@@ -408,26 +434,27 @@ describe('Test cases for Cart flow', () => {
             } else {
             cy.log('No hay colores disponibles o visibles para seleccionar.');
             }
-            });
+        });
+        });
 
-            cy.get('.size_tops .swatch-option.text').then($options => {
-            // Filtrar solo las opciones que están habilitadas
-            const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
-            if (availableOptions.length > 0) {
-            // Elige un índice aleatorio entre las opciones disponibles y habilitadas
-            const randomIndex = Math.floor(Math.random() * availableOptions.length);
-            // Realiza clic en la opción en el índice aleatorio
-            cy.wrap(availableOptions).eq(randomIndex).click({force: true});
-            } else {
-            // Manejar el caso en que no hay tallas disponibles
-            cy.log('No hay tallas disponibles para el color seleccionado.');
-            }
-            }); 
+            cy.get('.swatch-attribute[data-attribute-code="size"] .swatch-attribute-options .swatch-option.text').then($options => {
+                // Filtrar solo las opciones que están habilitadas
+                const availableOptions = $options.filter((index, el) => Cypress.$(el).is(':visible') && !Cypress.$(el).hasClass('disabled'));
+                if (availableOptions.length > 0) {
+                  // Elige un índice aleatorio entre las opciones disponibles y habilitadas
+                  const randomIndex = Math.floor(Math.random() * availableOptions.length);
+                  // Realiza clic en la opción en el índice aleatorio
+                  cy.wrap(availableOptions).eq(randomIndex).click({ force: true });
+                } else {
+                  // Manejar el caso en que no hay tallas disponibles
+                  cy.log('No hay tallas disponibles para el color seleccionado.');
+                }
+              }); ; 
 
            // Agrega el producto al carrito
            cy.get('#product-addtocart-button').click();
 
-            cy.wait(5000)
+            cy.wait(8000)
 
             // Espera a que el estado del carrito cambie correctamente
             cy.get('.counter.qty.empty, .counter.qty').should(($newCartState) => {
@@ -450,14 +477,11 @@ describe('Test cases for Cart flow', () => {
             // Verifica si se muestra el mensaje de éxito
             cy.get('.message-success').should('be.visible');
 
-             //Hacer click en botón para cerrar modal AÑADISTE A TU CARRO DE COMPRAS           
-            cy.get('button.action-close').last().click();
-            
-            //Abrir pop up carrito
-            cy.get('button.opencart').click();
+            // Selecciona el enlace 'Mi Carro' y haz clic en él
+            cy.get('a.action.showcart').click();
 
-            //Click en botón "Ver Carrito" de pop up carrito
-            cy.get('button#top-cart-btn-shoppingCart').click();
+            // Selecciona el enlace 'Ver todo el carro' y haz clic en él
+            cy.get('a.action.viewcart').click();
 
             // Verifica que la URL actual incluya el path específico
             cy.url().should('include', '/checkout/cart/');

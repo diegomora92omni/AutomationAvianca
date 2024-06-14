@@ -18,6 +18,31 @@ let initialItemCount;
 
 // cypress/support/commands.js
 
+Cypress.Commands.add('closeNewsletterPopup', () => {
+  cy.get('button.action-close[data-role="closeBtn"]', { timeout: 10000 }).then($button => {
+    if ($button.is(':visible')) {
+      cy.log('Newsletter popup is visible, closing it now.');
+      cy.wrap($button).first().click({ force: true });
+      cy.wait(500); // Esperar medio segundo para asegurar que la acción se complete
+      cy.get('button.action-close[data-role="closeBtn"]').should('not.be.visible'); // Verificar que el pop-up se ha cerrado
+      cy.screenshot('closed-newsletter-popup');
+    }
+  });
+});
+
+Cypress.Commands.add('acceptCookies', () => {
+  cy.get('#btn-cookie-allow', { timeout: 10000 }).then($button => {
+    if ($button.is(':visible')) {
+      cy.log('Cookies banner is visible, accepting it now.');
+      cy.wrap($button).click({ force: true });
+      cy.wait(500); // Esperar medio segundo para asegurar que la acción se complete
+      cy.screenshot('accepted-cookies');
+    } else {
+      cy.log('Cookies banner is not visible.');
+    }
+  });
+});
+
 // Comando para seleccionar un tipo de documento de forma aleatoria
 Cypress.Commands.add('selectDocumentType', () => {
   cy.get('#type_identification').then(select => {
@@ -32,12 +57,15 @@ Cypress.Commands.add('selectDocumentType', () => {
 // Comando para generar un número de identificación basado en el tipo seleccionado
 Cypress.Commands.add('generateIdentification', (type) => {
   let length;
-  if (type === '4') { // DNI
+
+  if (type === '1766') { // DNI
     length = 8;
-  } else if (type === '7') { // Cédula de extranjería
-    length = Math.floor(Math.random() * (12 - 8 + 1)) + 8;
-  } else if (type === '10') { // Pasaporte
+  } else if (type === '1763') { // Pasaporte
     length = Math.floor(Math.random() * (12 - 9 + 1)) + 9;
+  } else if (type === '1769') { // RUC
+    length = 11;
+  } else {
+    throw new Error('Tipo de identificación no soportado');
   }
 
   let identification = '';
@@ -67,35 +95,37 @@ Cypress.Commands.add('fillRegisterFormWithRandomData', () => {
   cy.get('#firstname').type(nombreAleatorio);
   cy.get('#lastname').type(apellidoAleatorio);
   cy.get('#is_subscribed').check();
-
-  // Llenar automáticamente el campo de fecha de nacimiento
-  cy.fillDOBField();
-
-  // Seleccionar el género de manera aleatoria
-  const generos = ["1", "2", "3"];
-  const generoAleatorio = generos[Math.floor(Math.random() * generos.length)];
-  cy.get('#gender').select(generoAleatorio);
-
-  // Generar y llenar el campo de teléfono con un número aleatorio que empiece por 9 y contenga 9 dígitos
-  const telefonoAleatorio = generateRandomPhoneNumber();
-  cy.get('#telefono').type(telefonoAleatorio);
-
-  // Asegura que el valor seleccionado del desplegable no sea vacío
-  cy.get('#parent_type_identification').should($select => {
-    const value = $select.val();
-    expect(value).to.not.be.empty;
-  });
-
-  // Nuevo: Seleccionar tipo de documento y llenar el número de identificación
-  cy.selectDocumentType().then(typeValue => {
-    cy.generateIdentification(typeValue).then(identificationNumber => {
-      cy.get('#identification_number').type(identificationNumber);
-    });
-  });
-
   cy.get('#email_address').type(emailAleatorio);
 
+  // Documentación para campos adicionales:
+  // Si necesitas activar los campos adicionales, descomenta el código correspondiente a continuación.
+
+  // Llenar automáticamente el campo de fecha de nacimiento
+  // cy.fillDOBField();
+
+  // Seleccionar el género de manera aleatoria
+  // const generos = ["1", "2", "3"];
+  // const generoAleatorio = generos[Math.floor(Math.random() * generos.length)];
+  // cy.get('#gender').select(generoAleatorio);
+
+  // Generar y llenar el campo de teléfono con un número aleatorio que empiece por 9 y contenga 9 dígitos
+  // const telefonoAleatorio = generateRandomPhoneNumber();
+  // cy.get('#telefono').type(telefonoAleatorio);
+
+  // Asegura que el valor seleccionado del desplegable no sea vacío
+  // cy.get('#parent_type_identification').should($select => {
+  //   const value = $select.val();
+  //   expect(value).to.not.be.empty;
+  // });
+
+  //Seleccionar tipo de documento y llenar el número de identificación
+  //cy.selectDocumentType().then(typeValue => {
+     //cy.generateIdentification(typeValue).then(identificationNumber => {
+       //cy.get('#identification_number').type(identificationNumber);
+    //});
+  //});
 });
+
 
 // -- Comandos Personalizados para Selecciones Aleatorias en el Flujo de Agregar al Carrito --
 
@@ -176,7 +206,7 @@ Cypress.Commands.add('verifySuccessMessageDisplayed', () => {
 // Inicio de sesión previo a flujo de compra
 
 Cypress.Commands.add('login', (email, password) => {
-  cy.contains('a', 'Entrar').click({force: true});
+  cy.contains('a', 'Únete').click({force: true});
   cy.get('#email').type(email);
   cy.get('#pass').type(password);
   cy.get('#send2').click();
@@ -185,12 +215,13 @@ Cypress.Commands.add('login', (email, password) => {
 // Comando Personalizado para seleccionar tipo de documento en checkout
 Cypress.Commands.add('selectDocumentTypeCO', () => {
   // Usa un selector que dependa del atributo `name` para seleccionar el elemento `<select>`
-  cy.get('select[name="custom_attributes[type_identification]"]').then(select => {
+  cy.get('select.select[name="custom_attributes[type_document]"]').then(select => {
     const options = select.find('option');
-    const randomIndex = Math.floor(Math.random() * options.length);
+    // Evita seleccionar la primera opción que es el placeholder
+    const randomIndex = Math.floor(Math.random() * (options.length - 1)) + 1;
     const randomValue = options.eq(randomIndex).val();
     // Utiliza el selector con el atributo `name` para seleccionar el valor aleatorio
-    cy.get('select[name="custom_attributes[type_identification]"]').select(randomValue);
+    cy.get('select.select[name="custom_attributes[type_document]"]').select(randomValue);
     return cy.wrap(randomValue); // Retorna el valor para su uso posterior
   });
 });
@@ -213,7 +244,7 @@ Cypress.Commands.add('createAccount', (password) => {
   cy.get('#password-confirmation').type('Pruebas123*')
 
   //Aceptar las políticas de privacidad de datos
-  cy.get('#data_privacy_policies_allowed').check();
+  //cy.get('#data_privacy_policies_allowed').check();
 
   // Enviar el formulario
   cy.get('#send2').click()
@@ -225,18 +256,18 @@ Cypress.Commands.add('createAccount', (password) => {
 
 // Define el comando personalizado para seleccionar un método de envío aleatorio
 Cypress.Commands.add('selectRandomShippingMethod', () => {
-  cy.get('#checkout-shipping-method-load .table-checkout-shipping-method tbody tr.row').then($rows => {
+  cy.get('#checkout-shipping-method-load .table-checkout-shipping-method .method').then($methods => {
     // Asegurarse de que haya métodos de envío disponibles
-    const shippingMethods = $rows.find('input[type="radio"]:enabled');
-    const count = shippingMethods.length;
+    const enabledShippingMethods = $methods.find('input[type="radio"]:enabled');
+    const count = enabledShippingMethods.length;
 
     // Verificar que hay opciones disponibles
     if (count > 0) {
       const randomIndex = Math.floor(Math.random() * count);
-      const randomShippingMethod = shippingMethods.eq(randomIndex);
+      const randomShippingMethod = enabledShippingMethods.eq(randomIndex);
 
       // Hacer clic en el método seleccionado aleatoriamente
-      randomShippingMethod.click();
+      cy.wrap(randomShippingMethod).click({ force: true });
     } else {
       throw new Error('No se encontraron métodos de envío habilitados.');
     }
