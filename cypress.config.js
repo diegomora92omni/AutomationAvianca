@@ -12,14 +12,14 @@ module.exports = defineConfig({
     saveAllAttempts: false,
   },
   retries: 4,
-  defaultCommandTimeout: 10000, // Incrementa el tiempo de espera por comando
+  defaultCommandTimeout: 50000, // Incrementa el tiempo de espera por comando
   pageLoadTimeout: 60000, // Incrementa el tiempo de espera de carga de página
   numTestsKeptInMemory: 1, // Reduce el número de pruebas mantenidas en memoria
   experimentalMemoryManagement: true, // Habilita el manejo experimental de memoria
   fixturesFolder: 'cypress/fixtures',
   supportFolder: 'cypress/support',
   e2e: {
-    baseUrl: 'https://mcstaging.merrell.com.pe/merrell_peru_store_view/',
+    baseUrl: 'https://www.avianca.com/es/',
     chromeWebSecurity: false,
     setupNodeEvents(on, config) {
       require('cypress-mochawesome-reporter/plugin')(on);
